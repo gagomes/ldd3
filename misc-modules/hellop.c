@@ -7,13 +7,6 @@
 
 MODULE_LICENSE("Dual BSD/GPL");
 
-/*                                                        
- * These lines, although not shown in the book,           
- * are needed to make hello.c run properly even when      
- * your kernel has version support enabled                
- */                                                       
-                                                          
-
 /*
  * A couple of parameters that can be passed in: how many times we say
  * hello, and to whom.

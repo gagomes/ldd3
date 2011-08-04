@@ -28,7 +28,6 @@
 #include <linux/tty.h>
 #include <asm/atomic.h>
 #include <linux/list.h>
-#include <linux/cred.h> /* current_uid(), current_euid() */
 #include <linux/sched.h>
 
 #include "scull.h"        /* local definitions */

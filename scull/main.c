@@ -389,6 +389,8 @@ ssize_t scull_write(struct file *filp, const char __user *buf, size_t count,
  * The ioctl() implementation
  */
 
+/* For changes in the ioctl API, see http://web.archiveorange.com/archive/v/u1yF7zbcV1zFXbC3gf6U
+   Documentation/filesystems/vfs.txt and fs/ioctl.c */
 long scull_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 {
 
