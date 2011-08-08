@@ -31,7 +31,7 @@ Important __struct__s: __file_operations__ __file__ __inode__ __cdev__
 
 _/proc/devices_ lists all char and block device drivers currently registered. _Documentation/devices.txt_ has a detailed explanation for all statically assigned major numbers. Network devices don't quite qualify for the "everything is a file" philosphy, so they aren't accessed through _/dev/_. A network device receives packets asynchronously from the outside, and pushes them toward the kernel; while a block driver operates only in response to kernel requests.
 
-The sample code provides a *scull_load* script that looks up _/proc/devices_ to find out the major number of the _scull_ driver, and _mkno_ the device nodes using its major number. In practice, _udev_ does the job automaticaly on modern kernels.
+The sample code provides a *scull_load* script that looks up _/proc/devices_ to find out the major number of the _scull_ driver, and _mknod_ the device nodes using its major number. In practice, _udev_ does the job automaticaly on modern kernels.
 
 The *\__user* annotation notes that a pointer is a user-space address, thereby allowing static analyzers to find bugs that directly dereference *\__user* pointers.
 
@@ -43,7 +43,7 @@ The *\__user* annotation notes that a pointer is a user-space address, thereby a
 
 *scull_release()* doesn't free anything, because we want to preserve the memory after the user closes the device file. *scull_cleanup_module()* will return all the resources when the module is unloaded.
 
-*copy_to_user()* and *copy_from_user()* return 0 if successful, and return the amount of memory still to be copied otherwise. *scull_read()* is free to transfer data less than requested for the sake of simplicity, and the user is expected to retry. *fread()* reissues the system call until completion of the requested data transfer, and the user won't even notice. *scull_write()* also does partial transfer, but should support the model of either failing or succeeding completely for compatibility.
+*copy_to_user()* and *copy_from_user()* return 0 if successful, and return the amount of memory still to be copied otherwise. *scull_read()* is free to transfer data less than requested for the sake of simplicity, and leave the job of retrying to the user. The *fread()* library function reissues the system call until completion of the requested data transfer. *scull_write()* also does partial transfer, although it should support the model of either failing or succeeding completely for compatibility.
 
 Chapter 4
 ---------
