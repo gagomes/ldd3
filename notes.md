@@ -48,3 +48,7 @@ The *\__user* annotation notes that a pointer is a user-space address, thereby a
 Chapter 4
 ---------
 
+Chapter 13
+---------
+
+http://www.kroah.com/linux/talks/ols_2005_driver_tutorial/index.html
