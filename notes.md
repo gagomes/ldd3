@@ -8,7 +8,7 @@ Chapter 2
 
 To load a kernel module, the kernel does a job similar to a linker, resolving symbols and adding the module's exported symbols to the kernel symbol table, all in memory. _modprobe_ looks at the module to be loaded to see if it references any symbols that are not currently defined, and looks for other modules in the current module search path that define those symbols. _lsmod_ works by reading _/proc/modules_, which is the older, single-file version of _/sys/module/_.
 
-For each exported symbol, the EXPORT_SYMBOL macro defined in _linux/module.h_ records information in the *__ksymtab* ELF section.
+For each exported symbol, the EXPORT\_SYMBOL macro defined in _linux/module.h_ records information in the *__ksymtab* ELF section.
 
 The kernel has a _vermagic_ mechanism to prevent loading an incompatible module built against a different kernel. _modinfo_ shows the vermagic string of a module by reading its _.modinfo_ ELF section. From _modprobe_'s man page, it can be used to force loading a module. For more information, see http://hychen.wuweig.org/?p=495 and http://blog.sina.com.cn/s/blog_602f87700100lg8m.html.
 
@@ -17,8 +17,6 @@ _linux/version.h_ has macros for version tests.
 _linux/init.h_ has macros to mark functions/data as used only at initialization time or exit time. They work by placing the definitions in special ELF sections, to give hints to the kernel. The comments are worth reading too.
 
 Module parameters can be passed at load time by _insmod_ or _modeprobe_, or better yet, by storing them in configuration file _/etc/modprobe.d/*.conf_ and the older _/etc/modprobe.conf_. See the man page for _modprobe.conf(5)_. Sysfs entries for the parameters can be created under _/sys/module/*/parameters/_ at parameter registration time. If created as writable, the parameters can be changed dynamically by writing to the files.
-
-Where a _printk_ message shows up is configurable. It may appear on the console, and/or on all terminals, and/or in log files such as _/var/log/messages_ or _/var/log/kernel.log_, and in _dmesg_. Default loglevel can be changed by writing to _/proc/sysrq-trigger_.
 
 Kernel code cannot do floating point arithmetic, because saving and restoring the floating point processor's state on each entry and exit of kernel space is too expensive.
 
@@ -47,6 +45,16 @@ The *\__user* annotation notes that a pointer is a user-space address, thereby a
 
 Chapter 4
 ---------
+
+This chapter starts with a list of configuration options in the kernel for debugging.
+
+Next we learn about _printk_ and loglevel. We indicate the loglevel with a macro, which expands to a string (see _linux/printk.h_), and is prepended to the format string. The log prefix will be parsed and stripped by *log_prefix()* defined in _kernel/printk.c_. The kernel writes messages into a circular buffer which can be read using the _syslog_ system call or _/proc/kmsg_. Reading _/proc/kmsg_ consumes the kernel buffer, so it should be read by only one process, typically the log daemon. The log daemon (_syslog-ng_, _rsyslog_, _klogd/syslogd_, etc.) is configured to dispatch the kernel messages along with other logs according to their facility and priority. Kernel messages are typically found in _/var/log/messages_ or _/var/log/kernel.log_. _dmesg_ can be used to print and control the kernel buffer.
+
+_printk.c_ defines four integers in the *console_printk* array, which is exposed to _/proc/sys/kernel/printk_. See man _proc(5)_ and _syslog(2)_ for their meaning. We are most interested in the first value, *console_loglevel*. If a printk loglevel is smaller (i.e. higher priority) than *console_loglevel*, the message is printed to the console. *console_loglevel* can be changed by writing to _/proc/sys/kernel/printk_, _/proc/sysrq-trigger_, or using _dmesg -n_.
+
+If we are creating a read-only _/proc_ file and the file contains a small number of lines, we can use *create_proc_read_entry()* and supply a *read_proc*. Otherwise, we should call use the *seq_file* interface and call *create_proc_entry()*.
+
+The kernel creates _/proc/kcore_ that represents the running kernel in the format of a core file for gdb. With CONFIG\_DEBUG\_INFO option set, we can examine kernel variables using standard gdb commands. Because gdb caches data, we need to make gdb discard old information with the command *core-file /proc/kcore*. To tell gdb about modules, issue the *add-symbol-file* command using the helper program *misc-progs/gdbline*. One trick is _print *(address)_ that prints the file name and line number for the code corresponding to that address or function pointer.
 
 Chapter 13
 ---------
