@@ -24,10 +24,11 @@
 #include <errno.h>
 #include <unistd.h>
 #include <sys/ioctl.h>
+#include <linux/tiocl.h>
 
 int main(int argc, char **argv)
 {
-    char bytes[2] = {11,0}; /* 11 is the TIOCLINUX cmd number */
+    char bytes[2] = {TIOCL_SETKMSGREDIRECT,0};
 
     if (argc==2) bytes[1] = atoi(argv[1]); /* the chosen console */
     else {
