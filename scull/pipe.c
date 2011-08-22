@@ -219,7 +219,7 @@ static ssize_t scull_p_write(struct file *filp, const char __user *buf, size_t c
 	/* finally, awake any reader */
 	wake_up_interruptible(&dev->inq);  /* blocked in read() and select() */
 
-	/* and signal asynchronous readers, explained late in chapter 5 */
+	/* and signal asynchronous readers, explained late in chapter 6 */
 	if (dev->async_queue)
 		kill_fasync(&dev->async_queue, SIGIO, POLL_IN);
 	PDEBUG("\"%s\" did write %li bytes\n",current->comm, (long)count);
