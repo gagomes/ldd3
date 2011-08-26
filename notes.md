@@ -60,6 +60,45 @@ The kernel creates _/proc/kcore_ that represents the running kernel in the forma
 
 *WARN_ON()*, *BUG_ON()*, and *dump_stack()* are also very useful.
 
+Chapter 5
+---------
+
+__Atomic integers__: *atomic_t*. Very efficient. On old SPARC implementation it's only 24 bits wide.
+
+__Atomic bit operations__: _asm/bitops.h_.
+
+__Spin locks__: *spinlock_t*. To make sure spinlocks are not held for a long time, kernel preemption is disabled on the processor that holds the spinlock, which is enough on uniprocessor machines. Code should never sleep while holding a spinlock. If a thread attempts to acquire a spinlock it already held, it will deadlock. Therefore, an interrupt hanlder must disable local interrupts before obtaining a spinlock, to prevent itself from reentering and spinning on the lock. For the same reason, any code that shares locks with interrupt handlers must disable interrupts before obtaining spinlocks. Likewise, if data is shared between a process context and a bottom half, we must disable bottom halves, but can leave interrupts enabled. Because two tasklets of the same type never run simultaneously, there is no need to protect data used only within a single type of tasklet. If data is shared between two different tasklets, we must obtain a spinlock, but do not need to disable bottom halves because a tasklet never preempts another running tasklet on the same processor. With softirqs, spinlock is needed but still, disabling bottom halves is not.
+
+__Reader-writer spin locks__: *rwlock_t*.
+
+__Semaphores__: *semaphore*. They sleep and therefore cannot be used in interrupt context. Usually we prefer *down_interruptible()* to *down()* because it allows a task to be awakened with a signal from user space. If the sleep is interrupted by a signal, *down_interruptible* will return *-EINTR*. If the semaphore is successfully acquired, it returns 0. We must always check the return value. In the system call implementation of the _scull_ example, we return *-ERESTARTSYS* if *down_interruptible* returns nonzero. Upon seeing this return code, the signal handling layer of the kernel will either restart the call if the signal handler was registered with *SA_RESTART* or return *-EINTR* to the user. If we cannot undo changes to cleanly retry the system call, we must return *-EINTR* instead. *ERESTARTSYS* is used only in kernel and not to be seen by user space except that _strace_ gets to see it between the return of the interrupted system call and the execution of the signal handler.
+
+__Mutexes__: *mutex*. In addition to binary sempaphores, the kernel defines a new mutex type, which is explained in _Documentation/mutex-design.txt_. The *mutex* struct is smaller and faster. *mutex* has a stricter and narrower use case, and in return, is easier to debug and enforce with *CONFIG_DEBUG_MUTEXES_ enabled. Whoever locked a mutex must unlock it. We cannot lock a mutex in one context and then unlock it in another.
+
+__Reader-writer semaphores__: *rw_semaphore*. The count is always 1, unlike semaphores. *down_read()* and *down_write()* use uninterruptible sleep and there is no interruptible variant. A unique method that reader-writer spin locks don't have is *downgrade_writer()*, which atomically converts an acquired write lock to a read lock.
+
+__Completion variables__: *completion*. Useful when one thread intiates some activity outside of the current thread, then waits for that activity to complete. Although we can use semaphores, they are heavily optimized for the _available_ case. Completions are a lightweight mechanism for one thread to tell another that the job is done. An example is the *vfork()* system call that uses *vfork_done* to wake up the parent process when the child execs or exits. Another example is *misc-modules/complete.c*.
+
+__Sequential locks__: *seqlock_t*. A lightweight and scalable lock for many readers and a few writers, that favors writers over readers. The data being accessed should be a simple structure involving no pointers. *write_seqlock()* acquires a spinlock to write exclusively, and then increments a sequence counter. Readers can access quickly without locks, except that they need to check for collisions and retry (sounds like STM!). Before reading the data, readers read the sequence counter with *read_seqbegin()*, which busy waits until the number becomes even, indicating no write is underway. After reading the data, readers compare the saved numer with the current sequence number, and retry the read if there is a mismatch. A prominent example is *jiffies_64* on machines that cannot atomically read the 64-bit integer.
+
+__Read-copy-update__ (__RCU__): _linux/rcupdate.h_. An advanced mutual exclusion scheme optimized for many reads and rare writes. The resource being protected should be accessed via pointers. When the data structure (e.g. linked list) needs to be changed, the writer makes a copy, changes the copy, and updates the pointer to the new copy. When no references to the old version remain, it can be garbage collected. More references can be found at https://www.ibm.com/developerworks/cn/linux/l-rcu/ http://en.wikipedia.org/wiki/Read-copy-update http://www.rdrop.com/users/paulmck/RCU/ http://www.linuxjournal.com/article/6993 Documentation/RCU/
+
+It's important that we protect __data__ and not code. It's the actual data inside critical sections that needs protection and not the code. Rather than lock code, always associate shared data with a specific lock. Locking in a device driver is usually straightforward. Start with a single lock that covers everything you do, then slowly move to finer locks, for example create one lock for every device you manage. Usually, functions invoked directly from system calls need to acquire locks, and internal functions can then assume that the locks have been properly acquired. A useful lock ordering rule is that we should take a local lock first before a more global lock; we should obtain semaphores efore spinlocks.
+
+Lock free algorithms exist. For example, _linux/kfifo.h_ defines a circular buffer that needs no locking as long as there are only one reader and one writer.
+
+An interesting book that talks about parallel programming is available at http://kernel.org/pub/linux/kernel/people/paulmck/perfbook/perfbook.html
+
+Chapter 7
+---------
+
+CONFIG_NO_HZ tickless kernel http://kerneltrap.org/node/6750 http://lwn.net/Articles/223185/
+
+Chapter 9
+---------
+
+*barrier()* prevents the compiler from reordering stores or loads across the compiler barrier. In addition to that, *rmb()* provides a read memory barrier so that no loads are reordered across the call by the processor. *wmb()* provides a write memory barrier, and *mb()* provides both. There are *smp* variants that only insert hardware barriers on SMP kernels.
+
 Chapter 13
 ---------
 
