@@ -14,7 +14,7 @@ clean:
 .PHONY: modules modules_install clean
 
 else
-    obj-m := netdevs.o
+    obj-m := netdevs.o dram.o
 endif
 
 
