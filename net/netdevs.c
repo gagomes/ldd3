@@ -12,7 +12,7 @@
 //-------------------------------------------------------------------
 
 #include <linux/module.h>	// for init_module() 
-#include <linux/proc_fs.h>	// for create_proc_info_entry() 
+#include <linux/proc_fs.h>	// for create_proc_read_entry()
 #include <linux/netdevice.h>	// for 'struct net_device'
 #include <asm/io.h>		// for virt_to_phys()
 
@@ -20,13 +20,13 @@ char modname[] = "netdevs";
 char legend[] = "List of the kernel's current 'struct net_device' objects";
 char header[] = "MemAddress   HardwareAddress  ifindex  Name";
 
-int my_get_info( char *buf, char **start, off_t off, int count )
+int my_get_info( char *buf, char **start, off_t off, int count, int *eof, void *data )
 {
 	struct net_device	*dev;
 	int			i, len = 0;
 	
 	len += sprintf( buf+len, "\n %s\n\n %s\n", legend, header );
-	for_each_netdev( dev ) 
+	for_each_netdev( &init_net, dev )
 		{
 		unsigned long	phys_address = virt_to_phys( dev );
 		unsigned char	*mac = dev->dev_addr;
@@ -40,13 +40,14 @@ int my_get_info( char *buf, char **start, off_t off, int count )
 	len += sprintf( buf+len, "\n" );
 	len += sprintf( buf+len, " sizeof( struct net_device )=" );
 	len += sprintf( buf+len, "%d bytes\n\n", sizeof( struct net_device ) );
+        *eof = 1;
 	return	len;
 }
 
 static int __init my_init( void )
 {
 	printk( "<1>\nInstalling \'%s\' module\n", modname );
-	create_proc_info_entry( modname, 0, NULL, my_get_info );
+	create_proc_read_entry( modname, 0, NULL, my_get_info, NULL );
 	return	0;  //SUCCESS
 }
 
