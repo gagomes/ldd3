@@ -29,10 +29,10 @@ int my_get_info( char *buf, char **start, off_t off, int count, int *eof, void *
 	for_each_netdev( &init_net, dev )
 		{
 		unsigned long	phys_address = virt_to_phys( dev );
-		unsigned char	*mac = dev->dev_addr;
 		len += sprintf( buf+len, " 0x%08lX  ", phys_address );
-		for (i = 0; i < 6; i++) 
-		    len += sprintf( buf+len, "%02X%c", mac[i], (i<5)?':':' ' );
+                // Use kernel format string extension to print MAC address,
+                // see http://lxr.linux.no/linux+v2.6.34/lib/vsprintf.c#L930
+		len += sprintf( buf+len, "%pM", dev->dev_addr );
 		len += sprintf( buf+len, " %3d   ", dev->ifindex ); 
 		len += sprintf( buf+len, "  %s ", dev->name );
 		len += sprintf( buf+len, "\n" );
