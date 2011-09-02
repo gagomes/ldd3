@@ -23,7 +23,7 @@ char header[] = "MemAddress   HardwareAddress  ifindex  Name";
 int my_get_info( char *buf, char **start, off_t off, int count, int *eof, void *data )
 {
 	struct net_device	*dev;
-	int			i, len = 0;
+	int			len = 0;
 	
 	len += sprintf( buf+len, "\n %s\n\n %s\n", legend, header );
 	for_each_netdev( &init_net, dev )
@@ -39,7 +39,7 @@ int my_get_info( char *buf, char **start, off_t off, int count, int *eof, void *
 		}
 	len += sprintf( buf+len, "\n" );
 	len += sprintf( buf+len, " sizeof( struct net_device )=" );
-	len += sprintf( buf+len, "%d bytes\n\n", sizeof( struct net_device ) );
+	len += sprintf( buf+len, "%lu bytes\n\n", sizeof( struct net_device ) );
         *eof = 1;
 	return	len;
 }
