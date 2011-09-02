@@ -11,7 +11,7 @@
 
 #include <linux/module.h>	// for init_module() 
 #include <linux/etherdevice.h>	// for alloc_etherdev()
-#include <linux/proc_fs.h>	// for create_proc_info_entry() 
+#include <linux/proc_fs.h>
 #include <linux/interrupt.h>	// for request_irq(), free_irq()
 #include <linux/wait.h>		// for init_wait_queue_head()
 
@@ -31,29 +31,29 @@ int my_stop( struct net_device * );
 int my_hard_start_xmit( struct sk_buff *, struct net_device * );
 irqreturn_t my_isr( int, void * );
 void my_rx_handler( unsigned long );
-int my_get_info( char *, char **, off_t, int );
 
 
 char modname[] = "netframe";
 struct net_device  *netdev;
 
 
-static int __init my_init( void )
+int my_get_info( char *buf, char **start, off_t off, int count, int *eof, void *data )
 {
-	printk( "<1>\nInstalling \'%s\' module\n", modname );
-	create_proc_info_entry( modname, 0, NULL, my_get_info );
+	int	len = 0;
 
-	netdev = alloc_etherdev( sizeof( MY_DRIVERDATA ) );
-	if ( !netdev ) return -ENOMEM;
-	
-	netdev->irq		= irqID;
-	netdev->open		= my_open;
-	netdev->stop		= my_stop;
-	netdev->hard_start_xmit	= my_hard_start_xmit;	
-	netdev->priv		= netdev_priv( netdev );
+	*start = buf;
+	if ( off == 0 )
+		{
+		len += sprintf( buf+len, "simulating an interrupt " );
+		len += sprintf( buf+len, "by \'%s\' \n", netdev->name  );
+		off += len;
+		}
+	else	asm(" int %0 " : : "i" (intID) );
 
-	return	register_netdev( netdev );  
+        *eof = 1;
+	return	len;
 }
+
 
 static void __exit my_exit(void )
 {
@@ -66,7 +66,7 @@ static void __exit my_exit(void )
 
 int my_open( struct net_device *dev ) 
 { 
-	MY_DRIVERDATA	*priv = dev->priv;
+   MY_DRIVERDATA	*priv = netdev_priv(dev);
 	unsigned long	devaddr = (unsigned long)dev;
 
 	printk( "opening the \'%s\' interface \n", dev->name );
@@ -84,7 +84,7 @@ int my_open( struct net_device *dev )
 
 int my_stop( struct net_device *dev ) 
 { 
-	MY_DRIVERDATA	*priv = dev->priv;
+   MY_DRIVERDATA	*priv = netdev_priv(dev);
 
 	printk( "stopping the \'%s\' interface \n", dev->name );
 
@@ -97,7 +97,7 @@ int my_stop( struct net_device *dev )
 
 int my_hard_start_xmit( struct sk_buff *skb, struct net_device *dev )
 {
-	MY_DRIVERDATA	*priv = (MY_DRIVERDATA*)dev->priv;
+   MY_DRIVERDATA	*priv = netdev_priv(dev);
 
 	printk( "starting transmit on the \'%s\' interface \n", dev->name );
 
@@ -115,7 +115,7 @@ int my_hard_start_xmit( struct sk_buff *skb, struct net_device *dev )
 irqreturn_t my_isr( int irq, void *data )
 {
 	struct net_device	*dev = (struct net_device*)data;
-	MY_DRIVERDATA		*priv = dev->priv;
+   MY_DRIVERDATA	*priv = netdev_priv(dev);
 
 	tasklet_schedule( &priv->my_rxtasklet );
 	wake_up_interruptible( &priv->my_waitqueue );
@@ -139,20 +139,24 @@ void my_rx_handler( unsigned long data )
 }
 
 
-int my_get_info( char *buf, char **start, off_t off, int count )
+static const struct net_device_ops my_netdev_ops = {
+	.ndo_open            = my_open,
+	.ndo_stop            = my_stop,
+	.ndo_start_xmit      = my_hard_start_xmit,
+};
+
+static int __init my_init( void )
 {
-	int	len = 0;
+	printk( "<1>\nInstalling \'%s\' module\n", modname );
+	create_proc_read_entry( modname, 0, NULL, my_get_info, NULL );
 
-	*start = buf;
-	if ( off == 0 )
-		{
-		len += sprintf( buf+len, "simulating an interrupt " );
-		len += sprintf( buf+len, "by \'%s\' \n", netdev->name  );
-		off += len;
-		}
-	else	asm(" int %0 " : : "i" (intID) );
+	netdev = alloc_etherdev( sizeof( MY_DRIVERDATA ) );
+	if ( !netdev ) return -ENOMEM;
 
-	return	len;
+	netdev->irq		= irqID;
+	netdev->netdev_ops	= &my_netdev_ops;
+
+	return	register_netdev( netdev );
 }
 
 module_init( my_init );
