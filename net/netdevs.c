@@ -39,7 +39,7 @@ int my_get_info( char *buf, char **start, off_t off, int count, int *eof, void *
 		}
 	len += sprintf( buf+len, "\n" );
 	len += sprintf( buf+len, " sizeof( struct net_device )=" );
-	len += sprintf( buf+len, "%lu bytes\n\n", sizeof( struct net_device ) );
+	len += sprintf( buf+len, "%zd bytes\n\n", sizeof( struct net_device ) );
         *eof = 1;
 	return	len;
 }
