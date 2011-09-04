@@ -14,9 +14,10 @@
 #include <linux/proc_fs.h>
 #include <linux/interrupt.h>	// for request_irq(), free_irq()
 #include <linux/wait.h>		// for init_wait_queue_head()
+#include <linux/sched.h>
 
-#define irqID		0x04	// temporary -- an unused IRQ
-#define intID		0x49	// temporary -- IOAPIC mapped  
+#define irqID		0x06	// temporary -- an unused IRQ from /proc/interrupts
+#define intID		0x36	// The interrupt vector ID (the lowest 8 bits) in the redirection table entry from /proc/ioapic
 
 
 typedef struct	{
@@ -116,6 +117,7 @@ irqreturn_t my_isr( int irq, void *data )
 {
 	struct net_device	*dev = (struct net_device*)data;
    MY_DRIVERDATA	*priv = netdev_priv(dev);
+   printk("Got an interrupt\n");
 
 	tasklet_schedule( &priv->my_rxtasklet );
 	wake_up_interruptible( &priv->my_waitqueue );

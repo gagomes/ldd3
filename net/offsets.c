@@ -25,7 +25,7 @@ int my_get_info( char *buf, char **start, off_t off, int count, int *eof, void *
 	int	o_name	= offsetof( struct net_device, name );
 	int	o_ifindex = offsetof( struct net_device, ifindex ); 
 	int	o_irq 	= offsetof( struct net_device, irq );
-	int	o_priv	= netdev_priv(0);
+	int	o_priv	= (int) netdev_priv(0);
 	int	o_devops = offsetof( struct net_device, netdev_ops );
 	int	o_dev_addr = offsetof( struct net_device, dev_addr );
 	int	len = 0;
