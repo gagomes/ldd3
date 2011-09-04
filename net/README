@@ -1,1 +1,8 @@
 Code taken from http://www.cs.usfca.edu/~cruse/cs686s08/ Programming Gigabit Ethernet
+
+Download Intel Software Developer's Manual from http://www.intel.com/products/ethernet/resource.htm
+http://download.intel.com/design/network/manuals/316080.pdf is for 82573L used in the course.
+http://download.intel.com/design/network/manuals/322409.pdf is for 82562V I have on my machine.
+
+For the 82562V PCI device, VENDOR=0x8086  DEVICE=0x104C  CLASS=0x020000
+See also the pci.lds file from pciutils
