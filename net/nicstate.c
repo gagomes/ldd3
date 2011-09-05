@@ -58,26 +58,48 @@ char	*link[] = { "DOWN", "UP" };
 char	*duplex[] = { "HALF", "FULL" };
 char	*speed[] = { "10Mbps", "100Mbps", "1000Mbps", "---" };
 
+unsigned long long  stamp1;
+unsigned long long  stamp2;
+unsigned long long  cycles;
 
 int my_get_info( char *buf, char **start, off_t off, int count, int *eof, void *data )
 {
 	int	status1, status2, len = 0;
 
+	// disable interrupts and save TimeStamp Counter's initial value
+	asm(" cli \n rdtsc ");
+	asm(" mov %%eax, stamp1 \n mov %%edx, stamp1+4 " : : : "ax", "dx" );
+
 	// input the current status via the i/o-space port-address
 	outl( E1000_STATUS, ioport );	// select register
 	status1 = inl( ioport + 4 );	// obtain contents
 
-	// input the current status via the i/o-memory mapping
-	status2 = ioread32( io + E1000_STATUS );
+	// save TimeStamp Counter's final value and reenable interrupts
+	asm(" rdtsc \n sti ");
+	asm(" mov %%eax, stamp2 \n mov %%edx, stamp2+4 " : : : "ax", "dx" );
 
+	// subtract to get the number of elapsed cpu clock-cycles
+	cycles = stamp2 - stamp1;
+
+	// display the number of elapsed cpu clock-cycles
+	len += sprintf( buf+len, "\n Elapsed cpu-cycles = %llu\n", cycles );
 	// display results based on mechanism #1
-	len += sprintf( buf+len, "\n STATUS: 0x%08X  ", status1 );
+	len += sprintf( buf+len, " STATUS: 0x%08X  ", status1 );
 	len += sprintf( buf+len, "speed=%s  ", speed[ (status1>>6)&3 ] );
 	len += sprintf( buf+len, "duplex=%s  ", duplex[ (status1>>0)&1 ] );
 	len += sprintf( buf+len, "link=%s  ", link[ (status1>>1)&1 ] );
 
+	asm(" cli \n rdtsc ");
+	asm(" mov %%eax, stamp1 \n mov %%edx, stamp1+4 " : : : "ax", "dx" );
+	// input the current status via the i/o-memory mapping
+	status2 = ioread32( io + E1000_STATUS );
+	asm(" rdtsc \n sti ");
+	asm(" mov %%eax, stamp2 \n mov %%edx, stamp2+4 " : : : "ax", "dx" );
+	cycles = stamp2 - stamp1;
+	len += sprintf( buf+len, "\n\n Elapsed cpu-cycles = %llu\n", cycles );
+
 	// display results based on mechanism #2
-	len += sprintf( buf+len, "\n STATUS: 0x%08X  ", status2 );
+	len += sprintf( buf+len, " STATUS: 0x%08X  ", status2 );
 	len += sprintf( buf+len, "speed=%s  ", speed[ (status2>>6)&3 ] );
 	len += sprintf( buf+len, "duplex=%s  ", duplex[ (status2>>0)&1 ] );
 	len += sprintf( buf+len, "link=%s  ", link[ (status2>>1)&1 ] );
