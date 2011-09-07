@@ -14,7 +14,7 @@ clean:
 .PHONY: modules modules_install clean
 
 else
-    obj-m := netdevs.o dram.o offsets.o netframe.o ioapic.o 82562.o nicstate.o nicping.o nicspy.o
+    obj-m := netdevs.o offsets.o netframe.o ioapic.o 82562.o nicstate.o nicping.o nicspy.o
 endif
 
 
