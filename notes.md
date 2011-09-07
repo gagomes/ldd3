@@ -67,7 +67,7 @@ __Atomic integers__: *atomic_t*. Very efficient. On old SPARC implementation it'
 
 __Atomic bit operations__: _asm/bitops.h_.
 
-__Spin locks__: *spinlock_t*. To make sure spinlocks are not held for a long time, kernel preemption is disabled on the processor that holds the spinlock, which is enough on uniprocessor machines. Code should never sleep while holding a spinlock. If a thread attempts to acquire a spinlock it already held, it will deadlock. Therefore, an interrupt hanlder must disable local interrupts before obtaining a spinlock, to prevent itself from reentering and spinning on the lock. For the same reason, any code that shares locks with interrupt handlers must disable interrupts before obtaining spinlocks. Likewise, if data is shared between a process context and a bottom half, we must disable bottom halves, but can leave interrupts enabled. Because two tasklets of the same type never run simultaneously, there is no need to protect data used only within a single type of tasklet. If data is shared between two different tasklets, we must obtain a spinlock, but do not need to disable bottom halves because a tasklet never preempts another running tasklet on the same processor. With softirqs, spinlock is needed but still, disabling bottom halves is not.
+__Spin locks__: *spinlock_t*. To make sure spinlocks are not held for a long time, kernel preemption is disabled on the processor that holds the spinlock, which is enough on uniprocessor machines. Code should never sleep while holding a spinlock. If a thread attempts to acquire a spinlock it already held, it will deadlock. Any code that shares locks with interrupt handlers must disable interrupts before obtaining spinlocks. Likewise, if data is shared between a process context and a bottom half, we must disable bottom halves, but can leave interrupts enabled. Because two tasklets of the same type never run simultaneously, there is no need to protect data used only within a single type of tasklet. If data is shared between two different tasklets, we must obtain a spinlock, but do not need to disable bottom halves because a tasklet never preempts another running tasklet on the same processor. With softirqs, spinlock is needed but still, disabling bottom halves is not.
 
 __Reader-writer spin locks__: *rwlock_t*.
 
@@ -94,10 +94,17 @@ Chapter 7
 
 CONFIG_NO_HZ tickless kernel http://kerneltrap.org/node/6750 http://lwn.net/Articles/223185/
 
+http://www.csie.nctu.edu.tw/~wjtsai/EmbeddedSystemDesign/Ch3-2.pdf
+
 Chapter 9
 ---------
 
 *barrier()* prevents the compiler from reordering stores or loads across the compiler barrier. In addition to that, *rmb()* provides a read memory barrier so that no loads are reordered across the call by the processor. *wmb()* provides a write memory barrier, and *mb()* provides both. There are *smp* variants that only insert hardware barriers on SMP kernels.
+
+Chapter 10
+---------
+
+http://www.alexonlinux.com/smp-affinity-and-proper-interrupt-handling-in-linux http://www.alexonlinux.com/why-interrupt-affinity-with-multiple-cores-is-not-such-a-good-thing http://www.alexonlinux.com/msi-x-the-right-way-to-spread-interrupt-load
 
 Chapter 13
 ---------
