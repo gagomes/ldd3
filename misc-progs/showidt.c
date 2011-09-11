@@ -68,7 +68,7 @@ int main( int argc, char **argv )
 		read( fd, &desc, sizeof( desc ) );
                 uint32_t offset = (desc.offset_2 << 16) | desc.offset_1;
                 // __KERNEL_CS selector is set to 0x60 in asm/segment.h.
-                // Look up offset in /proc/kallsyms we can find handlers set up in traps.c.
+                // Look up offset in /proc/kallsyms we can find trap handlers and irq_entries_start.
 		printf( " %08X %X %X", offset, desc.selector, desc.type_attr );
 		}
 	printf( "\n\n" );

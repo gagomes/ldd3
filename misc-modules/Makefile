@@ -27,7 +27,7 @@ else
     # called from kernel build system: just declare what our modules are
     obj-m := hello.o hellop.o seq.o jit.o jiq.o sleepy.o complete.o \
              silly.o faulty.o kdatasize.o kdataalign.o seesetfs.o dram.o \
-             activity.o smpwatch.o ioapic.o
+             activity.o smpwatch.o ioapic.o pgdir.o vma.o
 endif
 
 
