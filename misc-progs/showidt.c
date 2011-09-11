@@ -15,9 +15,21 @@
 
 #include <stdio.h>	// for printf(), perror() 
 #include <fcntl.h>	// for open() 
-#include <unistd.h>	// for read() 
+#include <unistd.h>	// for read()
+#include <stdint.h> 
 
 #define START_KERNEL_map 0xC0000000
+
+// http://wiki.osdev.org/Interrupt_Descriptor_Table
+// Intel's internal faults are initialized in arch/x86/kernel/traps.c,
+// and external IRQs are initialized in irqinit.c, with the entry stubs set up in entry_32.S.
+struct IDTDescr{
+   uint16_t offset_1; // offset bits 0..15
+   uint16_t selector; // a code segment selector in GDT or LDT
+   uint8_t zero;      // unused, set to 0
+   uint8_t type_attr; // type and attributes, see below
+   uint16_t offset_2; // offset bits 16..31
+};
 
 char devname[] = "/dev/dram";
 unsigned short 	idtr[3];
@@ -48,12 +60,17 @@ int main( int argc, char **argv )
 	int	fd = open( devname, O_RDONLY );
 	if ( fd < 0 ) { perror( devname ); return -1; }
 	lseek( fd, idt_phys_address, SEEK_SET );
-	for (int i = 0; i < n_elts; i++)
+        int i = 0;
+	for (; i < n_elts; i++)
 		{
-		if ( ( i % 4 ) == 0 ) printf( "\n %02X: ", i );
-		unsigned long long	desc;
+		printf( "\n%02X: ", i );
+		struct IDTDescr desc;
 		read( fd, &desc, sizeof( desc ) );
-		printf( " %016llX ", desc );
+                uint32_t offset = (desc.offset_2 << 16) | desc.offset_1;
+                // __KERNEL_CS selector is set to 0x60 in asm/segment.h.
+                // Look up offset in /proc/kallsyms we can find handlers set up in traps.c.
+		printf( " %08X %X %X", offset, desc.selector, desc.type_attr );
 		}
 	printf( "\n\n" );
+        return 0;
 }
