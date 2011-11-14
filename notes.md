@@ -3,6 +3,10 @@ Chapter 1
 
 _kernel/module.c_ implements the _init_module_ system call and other functions for loading and unloading kernel modules.
 
+cscope -qkR
+
+make TAGS
+
 Chapter 2
 ---------
 
@@ -31,7 +35,7 @@ Important __struct__s: __file_operations__ __file__ __inode__ __cdev__
 
 _/proc/devices_ lists all char and block device drivers currently registered. _Documentation/devices.txt_ has a detailed explanation for all statically assigned major numbers. Network devices don't quite qualify for the "everything is a file" philosphy, so they aren't accessed through _/dev/_. A network device receives packets asynchronously from the outside, and pushes them toward the kernel; while a block driver operates only in response to kernel requests.
 
-The sample code provides a *scull_load* script that looks up _/proc/devices_ to find out the major number of the _scull_ driver, and _mknod_ the device nodes using its major number. In practice, _udev_ does the job automaticaly on modern kernels.
+The sample code provides a *scull_load* script that looks up _/proc/devices_ to find out the major number of the _scull_ driver, and _mknod_ the device nodes using its major number. In practice, _udev_ does the job automaticaly on modern kernels. See http://www.linuxfromscratch.org/lfs/view/development/chapter07/udev.html
 
 The *\__user* annotation notes that a pointer is a user-space address, thereby allowing static analyzers to find bugs that directly dereference *\__user* pointers.
 
@@ -101,10 +105,36 @@ Chapter 9
 
 *barrier()* prevents the compiler from reordering stores or loads across the compiler barrier. In addition to that, *rmb()* provides a read memory barrier so that no loads are reordered across the call by the processor. *wmb()* provides a write memory barrier, and *mb()* provides both. There are *smp* variants that only insert hardware barriers on SMP kernels.
 
+http://duartes.org/gustavo/blog/post/motherboard-chipsets-memory-map
+
+/proc/iomem
+
 Chapter 10
 ---------
 
-http://www.alexonlinux.com/smp-affinity-and-proper-interrupt-handling-in-linux http://www.alexonlinux.com/why-interrupt-affinity-with-multiple-cores-is-not-such-a-good-thing http://www.alexonlinux.com/msi-x-the-right-way-to-spread-interrupt-load
+http://www.alexonlinux.com/smp-affinity-and-proper-interrupt-handling-in-linux http://www.alexonlinux.com/why-interrupt-affinity-with-multiple-cores-is-not-such-a-good-thing http://www.alexonlinux.com/msi-x-the-right-way-to-spread-interrupt-load http://lappwiki01.in2p3.fr/twiki-virgo/pub/VirgoRD/Software/Bibliography/Linux_Interrupts.pdf
+
+Chapter 12
+---------
+
+Documentation/PCI/
+http://www.redhat.com/mirrors/LDP/HOWTO/Plug-and-Play-HOWTO.html
+http://tldp.org/LDP/tlk/dd/pci.html
+http://en.wikipedia.org/wiki/PCI_configuration_space
+http://xwindow.angelfire.com/
+http://www.linux-mips.org/wiki/PCI_Subsystem
+http://wiki.osdev.org/PCI
+http://www.acm.uiuc.edu/sigops/roll_your_own/7.c.html
+http://g2pc1.bu.edu/~qzpeng/manual/pcip.pdf
+http://blog.sina.com.cn/s/articlelist_1685243084_3_1.html
+http://www.ilinuxkernel.com/files/5/Linux_PCI_Express_Kernel_RW.htm
+http://www.linuxforum.net/forum/showflat.php?Cat=&Board=linuxK&Number=251312
+
+_lspci_ _setpci_. _/usr/share/hwdata/pci.ids_ from the _pciutils_ packages provides mapping from VendorID/DeviceID to VendorName/DeviceName.
+
+_/proc/bus/pci/_ _/sys/bus/pci/_  Try the _tree_ command on these directories. _/proc/bus/pci/devices_ is a text file with device information, and _/proc/bus/pci/*/*_ are binary files that report a snapshot of the configuration registers. The individual devices also appear the sysfs tree under _/sys/bus/pci/devices_, which are symbolic links to the directories under _/sys/devices/pci0000:00/_, unless there are multiple PCI domains (which is uncommon on PCs). Under a PCI Device sysfs directory, _config_ is a binary file just like _/proc/bus/pci/*/*_. Other files like vendor, device, class, irq are obtained from the configuration space. The file _resource_ shows the current memory resources alocated.
+
+The module initialization code for a PCI driver usually just calls pci_register_driver(&pci_driver), where the *pci_driver* struct defines an *id_table* and a few callback functions. The *id_table* is an array of *pci_device_id* structs, with an empty structure to mark the end of the table. This table indicates which devices are supported by the driver. Two helper macros should be used to intialize a *pci_device_id* struct. *PCI_DEVICE* matches the specific vendor and device ID, and *PCI_DEVICE_CLASS* matches a specific PCI class. This *id_table* is also exported to user space via the *MODULE_DEVICE_TABLE* macro which creates a local variable *__mod_pci_device_table*. In the kernel build process, _depmod_ searches all modules for that symbol, and adds it to the file */lib/modules/KERNEL_VERSION/modules.pcimap*. This map was used by the hotplug system, but not so much these days. See _Module Loading_ in http://www.linuxfromscratch.org/lfs/view/development/chapter07/udev.html.
 
 Chapter 13
 ---------
