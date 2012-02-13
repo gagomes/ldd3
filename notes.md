@@ -100,19 +100,28 @@ CONFIG_NO_HZ tickless kernel http://kerneltrap.org/node/6750 http://lwn.net/Arti
 
 http://www.csie.nctu.edu.tw/~wjtsai/EmbeddedSystemDesign/Ch3-2.pdf
 
+http://www.halobates.de/memorywaste.pdf
+http://www.halobates.de/memory.pdf
+
 Chapter 9
 ---------
 
-*barrier()* prevents the compiler from reordering stores or loads across the compiler barrier. In addition to that, *rmb()* provides a read memory barrier so that no loads are reordered across the call by the processor. *wmb()* provides a write memory barrier, and *mb()* provides both. There are *smp* variants that only insert hardware barriers on SMP kernels.
+*barrier()* prevents the compiler from reordering stores or loads across the compiler barrier. In addition to that, *rmb()* provides a read memory barrier so that no loads are reordered across the call by the processor. *wmb()* provides a write memory barrier, and *mb()* provides both. There are *smp* variants that only insert hardware barriers on SMP kernels. Synchronization primitives, such as spinlock and atomic_t operations, also function as memory barriers.
 
 http://duartes.org/gustavo/blog/post/motherboard-chipsets-memory-map
 
 /proc/iomem
 
+/proc/ioports
+
 Chapter 10
 ---------
 
-http://www.alexonlinux.com/smp-affinity-and-proper-interrupt-handling-in-linux http://www.alexonlinux.com/why-interrupt-affinity-with-multiple-cores-is-not-such-a-good-thing http://www.alexonlinux.com/msi-x-the-right-way-to-spread-interrupt-load http://lappwiki01.in2p3.fr/twiki-virgo/pub/VirgoRD/Software/Bibliography/Linux_Interrupts.pdf
+http://www.alexonlinux.com/smp-affinity-and-proper-interrupt-handling-in-linux 
+http://www.alexonlinux.com/why-interrupt-affinity-with-multiple-cores-is-not-such-a-good-thing 
+http://www.alexonlinux.com/msi-x-the-right-way-to-spread-interrupt-load 
+http://lappwiki01.in2p3.fr/twiki-virgo/pub/VirgoRD/Software/Bibliography/Linux_Interrupts.pdf
+http://people.freebsd.org/~jhb/papers/bsdcan/2007/
 
 Chapter 12
 ---------
@@ -129,6 +138,12 @@ http://g2pc1.bu.edu/~qzpeng/manual/pcip.pdf
 http://blog.sina.com.cn/s/articlelist_1685243084_3_1.html
 http://www.ilinuxkernel.com/files/5/Linux_PCI_Express_Kernel_RW.htm
 http://www.linuxforum.net/forum/showflat.php?Cat=&Board=linuxK&Number=251312
+http://www.linuxforum.net/forum/showflat.php?Cat=&Board=linuxk&Number=640673
+http://blog.csdn.net/fudan_abc/article/category/345294
+http://blog.chinaunix.net/uid-20543183-id-1930826.html
+http://wqch.chinaunix.com/space.php?uid=14214482&do=blog&classid=146872
+
+Unlike what the links above say, pci_legacy_init()/pcibios_scan_root() isn't always called. See git change b72d0db9dd.
 
 _lspci_ _setpci_. _/usr/share/hwdata/pci.ids_ from the _pciutils_ packages provides mapping from VendorID/DeviceID to VendorName/DeviceName.
 
@@ -140,3 +155,8 @@ Chapter 13
 ---------
 
 http://www.kroah.com/linux/talks/ols_2005_driver_tutorial/index.html
+
+Chapter 14
+---------
+
+_struct kobject_ is the fundamental structure that holds the device model together.  p365
