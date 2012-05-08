@@ -40,7 +40,7 @@
 
 char *prgname;
 
-#ifdef __i386__
+#if defined(__i386__) || defined(__x86_64__)
 static int read_and_print_one(unsigned int port,int size)
 {
     static int iopldone = 0;
